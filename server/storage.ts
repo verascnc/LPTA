@@ -1,9 +1,11 @@
 import { 
-  clients, trucks, deliveries, routes,
+  clients, trucks, deliveries, routes, reports, maintenanceRecords,
   type Client, type InsertClient,
   type Truck, type InsertTruck,
   type Delivery, type InsertDelivery,
   type Route, type InsertRoute,
+  type Report, type InsertReport,
+  type MaintenanceRecord, type InsertMaintenanceRecord,
   type DeliveryWithClient, type TruckWithStats, type RouteWithDetails
 } from "@shared/schema";
 import { db } from "./db";
@@ -44,6 +46,20 @@ export interface IStorage {
   createRoute(route: InsertRoute): Promise<Route>;
   updateRoute(id: number, route: Partial<InsertRoute>): Promise<Route | undefined>;
   deleteRoute(id: number): Promise<boolean>;
+
+  // Report operations
+  getReports(): Promise<Report[]>;
+  getReport(id: number): Promise<Report | undefined>;
+  createReport(report: InsertReport): Promise<Report>;
+  deleteReport(id: number): Promise<boolean>;
+
+  // Maintenance record operations
+  getMaintenanceRecords(): Promise<MaintenanceRecord[]>;
+  getMaintenanceRecord(id: number): Promise<MaintenanceRecord | undefined>;
+  getMaintenanceRecordsByTruck(truckId: number): Promise<MaintenanceRecord[]>;
+  createMaintenanceRecord(record: InsertMaintenanceRecord): Promise<MaintenanceRecord>;
+  updateMaintenanceRecord(id: number, record: Partial<InsertMaintenanceRecord>): Promise<MaintenanceRecord | undefined>;
+  deleteMaintenanceRecord(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -272,6 +288,65 @@ export class DatabaseStorage implements IStorage {
 
   async deleteRoute(id: number): Promise<boolean> {
     const result = await db.delete(routes).where(eq(routes.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Report operations
+  async getReports(): Promise<Report[]> {
+    return await db.select().from(reports);
+  }
+
+  async getReport(id: number): Promise<Report | undefined> {
+    const [report] = await db.select().from(reports).where(eq(reports.id, id));
+    return report || undefined;
+  }
+
+  async createReport(insertReport: InsertReport): Promise<Report> {
+    const [report] = await db
+      .insert(reports)
+      .values(insertReport)
+      .returning();
+    return report;
+  }
+
+  async deleteReport(id: number): Promise<boolean> {
+    const result = await db.delete(reports).where(eq(reports.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Maintenance record operations
+  async getMaintenanceRecords(): Promise<MaintenanceRecord[]> {
+    return await db.select().from(maintenanceRecords);
+  }
+
+  async getMaintenanceRecord(id: number): Promise<MaintenanceRecord | undefined> {
+    const [record] = await db.select().from(maintenanceRecords).where(eq(maintenanceRecords.id, id));
+    return record || undefined;
+  }
+
+  async getMaintenanceRecordsByTruck(truckId: number): Promise<MaintenanceRecord[]> {
+    return await db.select().from(maintenanceRecords).where(eq(maintenanceRecords.truckId, truckId));
+  }
+
+  async createMaintenanceRecord(insertRecord: InsertMaintenanceRecord): Promise<MaintenanceRecord> {
+    const [record] = await db
+      .insert(maintenanceRecords)
+      .values(insertRecord)
+      .returning();
+    return record;
+  }
+
+  async updateMaintenanceRecord(id: number, updateData: Partial<InsertMaintenanceRecord>): Promise<MaintenanceRecord | undefined> {
+    const [record] = await db
+      .update(maintenanceRecords)
+      .set(updateData)
+      .where(eq(maintenanceRecords.id, id))
+      .returning();
+    return record || undefined;
+  }
+
+  async deleteMaintenanceRecord(id: number): Promise<boolean> {
+    const result = await db.delete(maintenanceRecords).where(eq(maintenanceRecords.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 }

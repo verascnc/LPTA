@@ -3,11 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import Sidebar from "@/components/sidebar";
 import Map from "@/components/map";
 import DeliveryPanel from "@/components/delivery-panel";
+import AnalyticsDashboard from "@/components/analytics-dashboard";
+import MaintenanceScheduler from "@/components/maintenance-scheduler";
+import DriverInterface from "@/components/driver-interface";
 import LanguageSwitcher from "@/components/language-switcher";
 import { Button } from "@/components/ui/button";
-import { Bell, Clock, User, Menu } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Bell, Clock, User, Menu, BarChart, Wrench, Truck } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useTranslation, formatTime } from "@/lib/i18n";
+import { useWebSocket } from "@/hooks/use-websocket";
 
 interface DashboardStats {
   activeRoutes: number;
@@ -23,6 +28,8 @@ export default function Dashboard() {
   const { t, language } = useTranslation();
   const [selectedTruck, setSelectedTruck] = useState<number | null>(1);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [activeTab, setActiveTab] = useState("overview");
+  const { isConnected, lastMessage } = useWebSocket();
 
   const { data: stats } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
@@ -35,6 +42,13 @@ export default function Dashboard() {
     }, 60000);
     return () => clearInterval(timer);
   }, []);
+
+  // Show real-time notifications
+  useEffect(() => {
+    if (lastMessage) {
+      console.log('Real-time update:', lastMessage);
+    }
+  }, [lastMessage]);
 
   const formatCurrentTime = (date: Date) => {
     return formatTime(date, language) + " AST"; // Atlantic Standard Time for Dominican Republic
