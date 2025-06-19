@@ -114,6 +114,60 @@ export interface TranslationStrings {
   moca: string;
   bonao: string;
   azua: string;
+
+  // Authentication & Landing Page
+  auth: {
+    login: string;
+    logout: string;
+  };
+  common: {
+    appName: string;
+  };
+  landing: {
+    hero: {
+      title: string;
+      subtitle: string;
+      cta: string;
+    };
+    features: {
+      title: string;
+      subtitle: string;
+      fleet: {
+        title: string;
+        description: string;
+      };
+      tracking: {
+        title: string;
+        description: string;
+      };
+      analytics: {
+        title: string;
+        description: string;
+      };
+      optimization: {
+        title: string;
+        description: string;
+      };
+      maintenance: {
+        title: string;
+        description: string;
+      };
+      multilingual: {
+        title: string;
+        description: string;
+      };
+    };
+    stats: {
+      title: string;
+      deliveries: string;
+      accuracy: string;
+      efficiency: string;
+      support: string;
+    };
+    footer: {
+      description: string;
+    };
+  };
 }
 
 const translations: Record<Language, TranslationStrings> = {
@@ -229,6 +283,60 @@ const translations: Record<Language, TranslationStrings> = {
     moca: 'Moca',
     bonao: 'Bonao',
     azua: 'Azua',
+
+    // Authentication & Landing Page
+    auth: {
+      login: 'Iniciar Sesión',
+      logout: 'Cerrar Sesión',
+    },
+    common: {
+      appName: 'LogiRuta',
+    },
+    landing: {
+      hero: {
+        title: 'Optimiza tus Entregas con Tecnología Avanzada',
+        subtitle: 'Sistema completo de gestión logística para República Dominicana con seguimiento en tiempo real, optimización de rutas y análisis empresarial.',
+        cta: 'Comenzar Ahora',
+      },
+      features: {
+        title: 'Características Empresariales',
+        subtitle: 'Todo lo que necesitas para gestionar tu flota de entregas de manera eficiente',
+        fleet: {
+          title: 'Gestión de Flota',
+          description: 'Administra tu flota completa con seguimiento de ubicación en tiempo real y monitoreo del estado de los vehículos.',
+        },
+        tracking: {
+          title: 'Seguimiento GPS',
+          description: 'Rastrea todas las entregas con precisión GPS y proporciona actualizaciones en tiempo real a los clientes.',
+        },
+        analytics: {
+          title: 'Análisis Avanzado',
+          description: 'Obtén información detallada sobre el rendimiento, eficiencia de combustible y métricas de entregas.',
+        },
+        optimization: {
+          title: 'Optimización de Rutas',
+          description: 'Algoritmos inteligentes para optimizar rutas y reducir tiempos de entrega y costos de combustible.',
+        },
+        maintenance: {
+          title: 'Gestión de Mantenimiento',
+          description: 'Programa y rastrea el mantenimiento de vehículos con alertas automáticas y seguimiento de costos.',
+        },
+        multilingual: {
+          title: 'Soporte Multiidioma',
+          description: 'Interfaz completamente localizada en español e inglés para República Dominicana.',
+        },
+      },
+      stats: {
+        title: 'Resultados Comprobados',
+        deliveries: 'Entregas Exitosas',
+        accuracy: 'Precisión GPS',
+        efficiency: 'Mejora en Eficiencia',
+        support: 'Soporte Técnico',
+      },
+      footer: {
+        description: 'La solución logística más avanzada para empresas dominicanas.',
+      },
+    },
   },
   en: {
     // Navigation & General
@@ -342,6 +450,60 @@ const translations: Record<Language, TranslationStrings> = {
     moca: 'Moca',
     bonao: 'Bonao',
     azua: 'Azua',
+
+    // Authentication & Landing Page
+    auth: {
+      login: 'Login',
+      logout: 'Logout',
+    },
+    common: {
+      appName: 'LogiRoute',
+    },
+    landing: {
+      hero: {
+        title: 'Optimize Your Deliveries with Advanced Technology',
+        subtitle: 'Complete logistics management system for Dominican Republic with real-time tracking, route optimization, and enterprise analytics.',
+        cta: 'Get Started',
+      },
+      features: {
+        title: 'Enterprise Features',
+        subtitle: 'Everything you need to efficiently manage your delivery fleet',
+        fleet: {
+          title: 'Fleet Management',
+          description: 'Manage your entire fleet with real-time location tracking and vehicle status monitoring.',
+        },
+        tracking: {
+          title: 'GPS Tracking',
+          description: 'Track all deliveries with GPS precision and provide real-time updates to customers.',
+        },
+        analytics: {
+          title: 'Advanced Analytics',
+          description: 'Get detailed insights on performance, fuel efficiency, and delivery metrics.',
+        },
+        optimization: {
+          title: 'Route Optimization',
+          description: 'Intelligent algorithms to optimize routes and reduce delivery times and fuel costs.',
+        },
+        maintenance: {
+          title: 'Maintenance Management',
+          description: 'Schedule and track vehicle maintenance with automated alerts and cost tracking.',
+        },
+        multilingual: {
+          title: 'Multilingual Support',
+          description: 'Fully localized interface in Spanish and English for Dominican Republic.',
+        },
+      },
+      stats: {
+        title: 'Proven Results',
+        deliveries: 'Successful Deliveries',
+        accuracy: 'GPS Accuracy',
+        efficiency: 'Efficiency Improvement',
+        support: 'Technical Support',
+      },
+      footer: {
+        description: 'The most advanced logistics solution for Dominican businesses.',
+      },
+    },
   }
 };
 

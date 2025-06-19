@@ -1,17 +1,22 @@
 import { 
-  clients, trucks, deliveries, routes, reports, maintenanceRecords,
+  clients, trucks, deliveries, routes, reports, maintenanceRecords, users,
   type Client, type InsertClient,
   type Truck, type InsertTruck,
   type Delivery, type InsertDelivery,
   type Route, type InsertRoute,
   type Report, type InsertReport,
   type MaintenanceRecord, type InsertMaintenanceRecord,
+  type User, type UpsertUser,
   type DeliveryWithClient, type TruckWithStats, type RouteWithDetails
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
+  // User operations (required for Replit Auth)
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+
   // Client operations
   getClients(): Promise<Client[]>;
   getClient(id: number): Promise<Client | undefined>;
@@ -63,6 +68,27 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // User operations (required for Replit Auth)
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
   async getClients(): Promise<Client[]> {
     return await db.select().from(clients);
   }
