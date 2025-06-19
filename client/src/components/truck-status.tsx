@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslation } from "@/lib/i18n";
 import type { TruckWithStats } from "@shared/schema";
 
 interface TruckStatusProps {
@@ -9,6 +10,8 @@ interface TruckStatusProps {
 }
 
 export default function TruckStatus({ truck, isSelected, onSelect }: TruckStatusProps) {
+  const { t } = useTranslation();
+  
   const getStatusIndicator = (status: string) => {
     switch (status) {
       case 'in-transit':
@@ -25,10 +28,10 @@ export default function TruckStatus({ truck, isSelected, onSelect }: TruckStatus
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      'in-transit': { className: "status-in-transit", label: "In Transit" },
-      'loading': { className: "status-loading", label: "Loading" },
-      'completed': { className: "status-completed", label: "Completed" },
-      'idle': { className: "status-idle", label: "Idle" },
+      'in-transit': { className: "status-in-transit", label: t.inTransit },
+      'loading': { className: "status-loading", label: t.loading },
+      'completed': { className: "status-completed", label: t.completed },
+      'idle': { className: "status-idle", label: t.idle },
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.idle;
@@ -41,12 +44,12 @@ export default function TruckStatus({ truck, isSelected, onSelect }: TruckStatus
 
   const getLocationText = (truck: TruckWithStats) => {
     if (truck.status === 'completed' || truck.status === 'idle') {
-      return "Warehouse A";
+      return t.warehouseA;
     }
     if (truck.status === 'loading') {
-      return "Warehouse A";
+      return t.warehouseA;
     }
-    return "Downtown District"; // In real app, this would be geocoded from lat/lng
+    return t.downtownDistrict; // In real app, this would be geocoded from lat/lng
   };
 
   const getProgressText = (truck: TruckWithStats) => {
@@ -55,24 +58,24 @@ export default function TruckStatus({ truck, isSelected, onSelect }: TruckStatus
     const total = completed + active;
     
     if (truck.status === 'completed') {
-      return `Progress: ${completed}/${total} deliveries`;
+      return `${t.progress} ${completed}/${total} ${t.deliveries}`;
     }
-    return `Progress: ${completed}/${total} deliveries`;
+    return `${t.progress} ${completed}/${total} ${t.deliveries}`;
   };
 
   const getETAText = (truck: TruckWithStats) => {
     switch (truck.status) {
       case 'in-transit':
-        return "ETA: 2h 15m";
+        return `${t.eta} 2${t.hours} 15${t.minutes}`;
       case 'loading':
-        return "Start: 30m";
+        return `${t.start} 30${t.minutes}`;
       case 'completed':
-        return `Completed: ${new Date().toLocaleTimeString("en-US", { 
+        return `${t.completed} ${new Date().toLocaleTimeString("es-DO", { 
           hour: "2-digit", 
           minute: "2-digit" 
         })}`;
       default:
-        return "Idle";
+        return t.idle;
     }
   };
 
@@ -92,8 +95,8 @@ export default function TruckStatus({ truck, isSelected, onSelect }: TruckStatus
           {getStatusBadge(truck.status)}
         </div>
         <div className="text-sm text-gray-600 space-y-1">
-          <div>Driver: {truck.driver}</div>
-          <div>Location: {getLocationText(truck)}</div>
+          <div>{t.driver} {truck.driver}</div>
+          <div>{t.location} {getLocationText(truck)}</div>
           <div className="flex justify-between text-xs">
             <span>{getProgressText(truck)}</span>
             <span>{getETAText(truck)}</span>

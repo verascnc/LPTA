@@ -61,56 +61,72 @@ export class MemStorage implements IStorage {
   }
 
   private seedData() {
-    // Seed some initial data
+    // Seed data for Dominican Republic logistics operation
     const sampleClients: InsertClient[] = [
-      { name: "Acme Corp", address: "1234 Business St, Downtown", latitude: 40.7128, longitude: -74.0060 },
-      { name: "TechStart Inc", address: "5678 Innovation Ave, Tech Park", latitude: 40.7589, longitude: -73.9851 },
-      { name: "Global Manufacturing", address: "9999 Industrial Way, Factory District", latitude: 40.6892, longitude: -74.0445 }
+      { name: "Supermercados La Cadena", address: "Av. Winston Churchill, Piantini, Santo Domingo", latitude: 18.4861, longitude: -69.9312 },
+      { name: "Farmacia Carol", address: "Calle El Conde 253, Zona Colonial, Santo Domingo", latitude: 18.4735, longitude: -69.8849 },
+      { name: "Restaurant El Mesón", address: "Av. George Washington 367, Malecón, Santo Domingo", latitude: 18.4648, longitude: -69.8932 },
+      { name: "Hotel Casa Colonial", address: "Calle Arzobispo Meriño 106, Zona Colonial", latitude: 18.4728, longitude: -69.8835 },
+      { name: "Ferretería Dominicana", address: "Av. 27 de Febrero 1762, Ensanche Naco", latitude: 18.4789, longitude: -69.9156 }
     ];
 
     const sampleTrucks: InsertTruck[] = [
-      { identifier: "TRK-001", driver: "Mike Johnson", currentLatitude: 40.7300, currentLongitude: -73.9950, status: "in-transit" },
-      { identifier: "TRK-002", driver: "Sarah Chen", currentLatitude: 40.7500, currentLongitude: -73.9800, status: "loading" },
-      { identifier: "TRK-003", driver: "Alex Rodriguez", currentLatitude: 40.7200, currentLongitude: -74.0100, status: "completed" }
+      { identifier: "CAM-001", driver: "Carlos Martínez", currentLatitude: 18.4861, currentLongitude: -69.9312, status: "in-transit" },
+      { identifier: "CAM-002", driver: "María González", currentLatitude: 18.4735, currentLongitude: -69.8849, status: "loading" },
+      { identifier: "CAM-003", driver: "José Rodríguez", currentLatitude: 18.4648, currentLongitude: -69.8932, status: "completed" }
     ];
 
     sampleClients.forEach(client => this.createClient(client));
     sampleTrucks.forEach(truck => this.createTruck(truck));
 
-    // Create sample deliveries
+    // Create sample deliveries for Dominican Republic
     this.createDelivery({
       clientId: 1,
       truckId: 1,
-      itemType: "boxes",
-      itemCount: 3,
+      itemType: "cajas",
+      itemCount: 5,
       priority: "high",
       status: "in-transit",
-      distance: 12.3,
-      estimatedTime: 45
+      distance: 8.5,
+      estimatedTime: 35,
+      specialInstructions: "Entrega en horario matutino preferiblemente"
     });
 
     this.createDelivery({
       clientId: 2,
       truckId: 1,
-      itemType: "tanks",
-      itemCount: 1,
-      priority: "medium",
+      itemType: "medicamentos",
+      itemCount: 2,
+      priority: "urgent",
       status: "delivered",
-      distance: 8.7,
-      estimatedTime: 30,
-      completedTime: new Date()
+      distance: 3.2,
+      estimatedTime: 15,
+      completedTime: new Date(),
+      specialInstructions: "Requiere refrigeración"
     });
 
     this.createDelivery({
       clientId: 3,
       truckId: 2,
-      itemType: "tanks",
-      itemCount: 2,
-      priority: "urgent",
+      itemType: "suministros",
+      itemCount: 8,
+      priority: "medium",
       status: "pending",
-      distance: 18.2,
-      estimatedTime: 65,
-      specialInstructions: "Special handling required for hazardous materials"
+      distance: 12.8,
+      estimatedTime: 50,
+      specialInstructions: "Coordinar con gerente de recepción"
+    });
+
+    this.createDelivery({
+      clientId: 4,
+      truckId: 3,
+      itemType: "equipos",
+      itemCount: 1,
+      priority: "low",
+      status: "delivered",
+      distance: 4.7,
+      estimatedTime: 20,
+      completedTime: new Date(Date.now() - 2 * 60 * 60 * 1000) // 2 hours ago
     });
   }
 
@@ -159,8 +175,12 @@ export class MemStorage implements IStorage {
   async createTruck(insertTruck: InsertTruck): Promise<Truck> {
     const id = this.currentId.trucks++;
     const truck: Truck = { 
-      ...insertTruck, 
       id,
+      identifier: insertTruck.identifier,
+      driver: insertTruck.driver,
+      currentLatitude: insertTruck.currentLatitude || null,
+      currentLongitude: insertTruck.currentLongitude || null,
+      status: insertTruck.status || "idle",
       lastUpdated: new Date()
     };
     this.trucks.set(id, truck);
@@ -237,7 +257,20 @@ export class MemStorage implements IStorage {
 
   async createDelivery(insertDelivery: InsertDelivery): Promise<Delivery> {
     const id = this.currentId.deliveries++;
-    const delivery: Delivery = { ...insertDelivery, id };
+    const delivery: Delivery = { 
+      id,
+      clientId: insertDelivery.clientId,
+      truckId: insertDelivery.truckId || null,
+      itemType: insertDelivery.itemType,
+      itemCount: insertDelivery.itemCount,
+      priority: insertDelivery.priority || "medium",
+      status: insertDelivery.status || "pending",
+      scheduledTime: insertDelivery.scheduledTime || null,
+      completedTime: insertDelivery.completedTime || null,
+      distance: insertDelivery.distance || null,
+      estimatedTime: insertDelivery.estimatedTime || null,
+      specialInstructions: insertDelivery.specialInstructions || null
+    };
     this.deliveries.set(id, delivery);
     return delivery;
   }
@@ -297,8 +330,12 @@ export class MemStorage implements IStorage {
   async createRoute(insertRoute: InsertRoute): Promise<Route> {
     const id = this.currentId.routes++;
     const route: Route = { 
-      ...insertRoute, 
       id,
+      truckId: insertRoute.truckId,
+      deliveryIds: insertRoute.deliveryIds,
+      totalDistance: insertRoute.totalDistance,
+      estimatedTime: insertRoute.estimatedTime,
+      status: insertRoute.status || "planned",
       createdAt: new Date()
     };
     this.routes.set(id, route);

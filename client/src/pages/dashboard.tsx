@@ -3,9 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import Sidebar from "@/components/sidebar";
 import Map from "@/components/map";
 import DeliveryPanel from "@/components/delivery-panel";
+import LanguageSwitcher from "@/components/language-switcher";
 import { Button } from "@/components/ui/button";
 import { Bell, Clock, User, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useTranslation, formatTime } from "@/lib/i18n";
 
 interface DashboardStats {
   activeRoutes: number;
@@ -18,6 +20,7 @@ interface DashboardStats {
 }
 
 export default function Dashboard() {
+  const { t, language } = useTranslation();
   const [selectedTruck, setSelectedTruck] = useState<number | null>(1);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -33,12 +36,8 @@ export default function Dashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    }) + " PST";
+  const formatCurrentTime = (date: Date) => {
+    return formatTime(date, language) + " AST"; // Atlantic Standard Time for Dominican Republic
   };
 
   return (
@@ -75,16 +74,17 @@ export default function Dashboard() {
           <div className="flex items-center space-x-4">
             <div className="lg:hidden w-8" /> {/* Spacer for mobile menu button */}
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Route Dashboard</h2>
-              <p className="text-sm text-gray-500">Manage and optimize delivery routes</p>
+              <h2 className="text-xl font-bold text-gray-900">{t.routeDashboard}</h2>
+              <p className="text-sm text-gray-500">{t.manageOptimizeRoutes}</p>
             </div>
           </div>
           
           <div className="flex items-center space-x-4">
+            <LanguageSwitcher />
             <div className="hidden md:flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded-lg">
               <Clock className="h-4 w-4 text-gray-500" />
               <span className="text-sm font-medium text-gray-700">
-                {formatTime(currentTime)}
+                {formatCurrentTime(currentTime)}
               </span>
             </div>
             <Button variant="ghost" size="icon" className="relative">
@@ -98,7 +98,7 @@ export default function Dashboard() {
                 <User className="h-4 w-4 text-white" />
               </div>
               <span className="hidden md:block text-sm font-medium text-gray-700">
-                John Smith
+                Juan Pérez
               </span>
             </div>
           </div>
@@ -123,19 +123,19 @@ export default function Dashboard() {
         <div className="flex items-center justify-around">
           <Button variant="ghost" className="flex flex-col items-center p-2 text-primary">
             <div className="w-6 h-6 flex items-center justify-center mb-1">📊</div>
-            <span className="text-xs">Dashboard</span>
+            <span className="text-xs">{t.dashboard}</span>
           </Button>
           <Button variant="ghost" className="flex flex-col items-center p-2 text-gray-600">
             <div className="w-6 h-6 flex items-center justify-center mb-1">🗺️</div>
-            <span className="text-xs">Routes</span>
+            <span className="text-xs">{t.routes}</span>
           </Button>
           <Button variant="ghost" className="flex flex-col items-center p-2 text-gray-600">
             <div className="w-6 h-6 flex items-center justify-center mb-1">🚛</div>
-            <span className="text-xs">Fleet</span>
+            <span className="text-xs">{t.fleet}</span>
           </Button>
           <Button variant="ghost" className="flex flex-col items-center p-2 text-gray-600">
             <div className="w-6 h-6 flex items-center justify-center mb-1">📈</div>
-            <span className="text-xs">Reports</span>
+            <span className="text-xs">{t.reports}</span>
           </Button>
         </div>
       </nav>

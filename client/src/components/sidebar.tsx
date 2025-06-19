@@ -6,6 +6,7 @@ import { Truck, Plus, Route, Warehouse } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import TruckStatus from "@/components/truck-status";
+import { useTranslation } from "@/lib/i18n";
 import type { TruckWithStats } from "@shared/schema";
 
 interface SidebarProps {
@@ -22,6 +23,7 @@ interface SidebarProps {
 export default function Sidebar({ selectedTruck, onTruckSelect, stats }: SidebarProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const { data: trucks, isLoading } = useQuery<TruckWithStats[]>({
     queryKey: ["/api/trucks"],
@@ -38,26 +40,26 @@ export default function Sidebar({ selectedTruck, onTruckSelect, stats }: Sidebar
     },
     onSuccess: () => {
       toast({
-        title: "Routes Optimized",
-        description: "All routes have been optimized for efficiency.",
+        title: t.routesOptimized,
+        description: t.allRoutesOptimized,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/routes"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
     },
     onError: () => {
       toast({
-        title: "Optimization Failed",
-        description: "Unable to optimize routes. Please try again.",
+        title: t.optimizationFailed,
+        description: t.unableToOptimize,
         variant: "destructive",
       });
     },
   });
 
   const formatTime = (minutes?: number) => {
-    if (!minutes) return "0m";
+    if (!minutes) return `0${t.minutes}`;
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+    return hours > 0 ? `${hours}${t.hours} ${mins}${t.minutes}` : `${mins}${t.minutes}`;
   };
 
   return (
@@ -69,8 +71,8 @@ export default function Sidebar({ selectedTruck, onTruckSelect, stats }: Sidebar
             <Truck className="h-4 w-4 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">LogiRoute</h1>
-            <p className="text-xs text-gray-500">Route Optimization</p>
+            <h1 className="text-xl font-bold text-gray-900">{t.appName}</h1>
+            <p className="text-xs text-gray-500">{t.routeOptimization}</p>
           </div>
         </div>
       </div>
@@ -80,18 +82,18 @@ export default function Sidebar({ selectedTruck, onTruckSelect, stats }: Sidebar
         <Card className="bg-blue-50 border-blue-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-blue-700">Active Routes</h3>
+              <h3 className="font-semibold text-blue-700">{t.activeRoutes}</h3>
               <Badge variant="secondary" className="bg-primary text-white">
                 {stats?.activeRoutes || 0}
               </Badge>
             </div>
             <div className="text-sm text-blue-600 space-y-1">
               <div className="flex justify-between">
-                <span>Total Distance:</span>
+                <span>{t.totalDistance}</span>
                 <span className="font-medium">{stats?.totalDistance?.toFixed(1) || 0} km</span>
               </div>
               <div className="flex justify-between">
-                <span>Est. Time:</span>
+                <span>{t.estimatedTime}</span>
                 <span className="font-medium">{formatTime(stats?.estimatedTime)}</span>
               </div>
             </div>
@@ -101,14 +103,14 @@ export default function Sidebar({ selectedTruck, onTruckSelect, stats }: Sidebar
         <Card className="bg-green-50 border-green-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-green-700">Completed Today</h3>
+              <h3 className="font-semibold text-green-700">{t.completedToday}</h3>
               <Badge variant="secondary" className="bg-green-500 text-white">
                 {stats?.completedToday || 0}
               </Badge>
             </div>
             <div className="text-sm text-green-600">
               <div className="flex justify-between">
-                <span>Efficiency:</span>
+                <span>{t.efficiency}</span>
                 <span className="font-medium">94.2%</span>
               </div>
             </div>
@@ -118,7 +120,7 @@ export default function Sidebar({ selectedTruck, onTruckSelect, stats }: Sidebar
 
       {/* Truck Status List */}
       <div className="flex-1 overflow-y-auto p-4">
-        <h3 className="font-semibold text-gray-700 mb-3">Fleet Status</h3>
+        <h3 className="font-semibold text-gray-700 mb-3">{t.fleetStatus}</h3>
         <div className="space-y-3">
           {isLoading ? (
             <div className="space-y-3">
@@ -145,13 +147,13 @@ export default function Sidebar({ selectedTruck, onTruckSelect, stats }: Sidebar
           className="w-full mb-2" 
           onClick={() => {
             toast({
-              title: "Create New Route",
-              description: "New route creation feature coming soon!",
+              title: t.createNewRoute,
+              description: t.createNewRouteFeature,
             });
           }}
         >
           <Plus className="h-4 w-4 mr-2" />
-          Create New Route
+          {t.createNewRoute}
         </Button>
         <Button 
           variant="outline" 
@@ -160,7 +162,7 @@ export default function Sidebar({ selectedTruck, onTruckSelect, stats }: Sidebar
           disabled={optimizeRoutesMutation.isPending}
         >
           <Route className="h-4 w-4 mr-2" />
-          {optimizeRoutesMutation.isPending ? "Optimizing..." : "Optimize All Routes"}
+          {optimizeRoutesMutation.isPending ? t.optimizing : t.optimizeAllRoutes}
         </Button>
       </div>
     </aside>

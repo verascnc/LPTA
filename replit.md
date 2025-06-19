@@ -103,7 +103,17 @@ The application follows a monorepo structure with clear separation between clien
 
 ## Changelog
 - June 19, 2025. Initial setup
+- June 19, 2025. Added multi-language support (Spanish/English) with Dominican Republic localization
+  - Implemented i18n system with Spanish as default language
+  - Added language switcher component with DR flag
+  - Localized all UI text, sample data, and coordinates for Santo Domingo
+  - Added Dominican-specific client names, addresses, and truck identifiers
+  - Updated time zones to Atlantic Standard Time (AST)
+  - Integrated Dominican Peso currency formatting
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Target market: Dominican Republic (Spanish primary, English secondary)
+Default language: Spanish (es-DO locale)
+Currency: Dominican Peso (DOP)

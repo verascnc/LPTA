@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ZoomIn, ZoomOut, Layers, Crosshair } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 import type { TruckWithStats, DeliveryWithClient } from "@shared/schema";
 
 interface MapProps {
@@ -10,8 +11,9 @@ interface MapProps {
 }
 
 export default function Map({ selectedTruck }: MapProps) {
+  const { t } = useTranslation();
   const mapRef = useRef<HTMLDivElement>(null);
-  const [mapCenter, setMapCenter] = useState({ lat: 40.7128, lng: -74.0060 });
+  const [mapCenter, setMapCenter] = useState({ lat: 18.4861, lng: -69.9312 }); // Santo Domingo coordinates
   const [zoom, setZoom] = useState(100);
 
   const { data: trucks } = useQuery<TruckWithStats[]>({
@@ -84,21 +86,21 @@ export default function Map({ selectedTruck }: MapProps) {
       {/* Map Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <h3 className="font-semibold text-gray-900">Live Route Tracking</h3>
+          <h3 className="font-semibold text-gray-900">{t.liveRouteTracking}</h3>
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-sm text-gray-600">Live Updates</span>
+            <span className="text-sm text-gray-600">{t.liveUpdates}</span>
           </div>
         </div>
         
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm">
             <Layers className="h-4 w-4 mr-1" />
-            Layers
+            {t.layers}
           </Button>
           <Button variant="outline" size="sm" onClick={handleCenterMap}>
             <Crosshair className="h-4 w-4 mr-1" />
-            Center
+            {t.center}
           </Button>
         </div>
       </div>
@@ -206,23 +208,23 @@ export default function Map({ selectedTruck }: MapProps) {
 
         {/* Legend */}
         <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg border border-gray-200 p-3">
-          <h4 className="font-semibold text-gray-900 text-sm mb-2">Legend</h4>
+          <h4 className="font-semibold text-gray-900 text-sm mb-2">{t.legend}</h4>
           <div className="space-y-1 text-xs">
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-              <span>Pending Delivery</span>
+              <span>{t.pendingDelivery}</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span>Completed</span>
+              <span>{t.completed}</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span>In Progress</span>
+              <span>{t.inProgress}</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              <span>Active Truck</span>
+              <span>{t.activeTruck}</span>
             </div>
           </div>
         </div>

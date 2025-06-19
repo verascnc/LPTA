@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Eye, Download, Flag } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation, formatTime } from "@/lib/i18n";
 import type { DeliveryWithClient } from "@shared/schema";
 
 interface DeliveryPanelProps {
@@ -14,6 +15,7 @@ interface DeliveryPanelProps {
 export default function DeliveryPanel({ selectedTruck }: DeliveryPanelProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t, language } = useTranslation();
 
   const { data: deliveries, isLoading } = useQuery<DeliveryWithClient[]>({
     queryKey: ["/api/deliveries/truck", selectedTruck],
@@ -31,16 +33,16 @@ export default function DeliveryPanel({ selectedTruck }: DeliveryPanelProps) {
     },
     onSuccess: () => {
       toast({
-        title: "Delivery Updated",
-        description: "Delivery status has been updated successfully.",
+        title: t.deliveryUpdated,
+        description: t.deliveryStatusUpdated,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/deliveries"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
     },
     onError: () => {
       toast({
-        title: "Update Failed",
-        description: "Unable to update delivery status. Please try again.",
+        title: t.updateFailed,
+        description: t.unableToUpdateStatus,
         variant: "destructive",
       });
     },
@@ -48,10 +50,10 @@ export default function DeliveryPanel({ selectedTruck }: DeliveryPanelProps) {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      pending: { className: "status-pending", label: "Pending" },
-      "in-transit": { className: "status-in-transit", label: "In Transit" },
-      delivered: { className: "status-delivered", label: "Delivered" },
-      failed: { className: "status-failed", label: "Failed" },
+      pending: { className: "status-pending", label: t.pending },
+      "in-transit": { className: "status-in-transit", label: t.inTransit },
+      delivered: { className: "status-delivered", label: t.delivered },
+      failed: { className: "status-failed", label: t.failed },
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
@@ -72,27 +74,28 @@ export default function DeliveryPanel({ selectedTruck }: DeliveryPanelProps) {
     }
   };
 
-  const formatTime = (date: Date | string | null) => {
+  const formatDeliveryTime = (date: Date | string | null) => {
     if (!date) return "N/A";
-    return new Date(date).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return formatTime(new Date(date), language);
   };
 
   const handleExportManifest = () => {
     if (!deliveries || deliveries.length === 0) {
       toast({
-        title: "No Data",
-        description: "No deliveries to export for this truck.",
+        title: t.noData,
+        description: t.noDeliveriesToExport,
         variant: "destructive",
       });
       return;
     }
 
-    // Create CSV content
+    // Create CSV content with Spanish headers
+    const headers = language === 'es' 
+      ? "Cliente,Dirección,Artículos,Estado,Prioridad,Distancia,Tiempo Est."
+      : "Client,Address,Items,Status,Priority,Distance,ETA";
+    
     const csvContent = [
-      "Client,Address,Items,Status,Priority,Distance,ETA",
+      headers,
       ...deliveries.map(d => 
         `"${d.client.name}","${d.client.address}","${d.itemCount} ${d.itemType}","${d.status}","${d.priority}","${d.distance || 0} km","${d.estimatedTime || 0} min"`
       )
@@ -103,15 +106,18 @@ export default function DeliveryPanel({ selectedTruck }: DeliveryPanelProps) {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `delivery-manifest-truck-${selectedTruck}.csv`;
+    const filename = language === 'es' 
+      ? `manifiesto-entregas-camion-${selectedTruck}.csv`
+      : `delivery-manifest-truck-${selectedTruck}.csv`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
 
     toast({
-      title: "Export Complete",
-      description: "Delivery manifest has been downloaded.",
+      title: t.exportComplete,
+      description: t.deliveryManifestDownloaded,
     });
   };
 
