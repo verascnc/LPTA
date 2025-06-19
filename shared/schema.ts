@@ -1,5 +1,6 @@
 import { pgTable, text, serial, integer, real, timestamp, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
+import { relations } from "drizzle-orm";
 import { z } from "zod";
 
 export const clients = pgTable("clients", {
@@ -44,6 +45,34 @@ export const routes = pgTable("routes", {
   status: text("status").notNull().default("planned"), // planned, active, completed
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+// Define relations
+export const clientsRelations = relations(clients, ({ many }) => ({
+  deliveries: many(deliveries),
+}));
+
+export const trucksRelations = relations(trucks, ({ many }) => ({
+  deliveries: many(deliveries),
+  routes: many(routes),
+}));
+
+export const deliveriesRelations = relations(deliveries, ({ one }) => ({
+  client: one(clients, {
+    fields: [deliveries.clientId],
+    references: [clients.id],
+  }),
+  truck: one(trucks, {
+    fields: [deliveries.truckId],
+    references: [trucks.id],
+  }),
+}));
+
+export const routesRelations = relations(routes, ({ one }) => ({
+  truck: one(trucks, {
+    fields: [routes.truckId],
+    references: [trucks.id],
+  }),
+}));
 
 // Insert schemas
 export const insertClientSchema = createInsertSchema(clients).omit({ id: true });

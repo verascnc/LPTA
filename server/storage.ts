@@ -6,6 +6,8 @@ import {
   type Route, type InsertRoute,
   type DeliveryWithClient, type TruckWithStats, type RouteWithDetails
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   // Client operations
@@ -42,6 +44,236 @@ export interface IStorage {
   createRoute(route: InsertRoute): Promise<Route>;
   updateRoute(id: number, route: Partial<InsertRoute>): Promise<Route | undefined>;
   deleteRoute(id: number): Promise<boolean>;
+}
+
+export class DatabaseStorage implements IStorage {
+  async getClients(): Promise<Client[]> {
+    return await db.select().from(clients);
+  }
+
+  async getClient(id: number): Promise<Client | undefined> {
+    const [client] = await db.select().from(clients).where(eq(clients.id, id));
+    return client || undefined;
+  }
+
+  async createClient(insertClient: InsertClient): Promise<Client> {
+    const [client] = await db
+      .insert(clients)
+      .values(insertClient)
+      .returning();
+    return client;
+  }
+
+  async updateClient(id: number, updateData: Partial<InsertClient>): Promise<Client | undefined> {
+    const [client] = await db
+      .update(clients)
+      .set(updateData)
+      .where(eq(clients.id, id))
+      .returning();
+    return client || undefined;
+  }
+
+  async deleteClient(id: number): Promise<boolean> {
+    const result = await db.delete(clients).where(eq(clients.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getTrucks(): Promise<Truck[]> {
+    return await db.select().from(trucks);
+  }
+
+  async getTruck(id: number): Promise<Truck | undefined> {
+    const [truck] = await db.select().from(trucks).where(eq(trucks.id, id));
+    return truck || undefined;
+  }
+
+  async getTruckByIdentifier(identifier: string): Promise<Truck | undefined> {
+    const [truck] = await db.select().from(trucks).where(eq(trucks.identifier, identifier));
+    return truck || undefined;
+  }
+
+  async createTruck(insertTruck: InsertTruck): Promise<Truck> {
+    const [truck] = await db
+      .insert(trucks)
+      .values({
+        ...insertTruck,
+        status: insertTruck.status || "idle",
+        currentLatitude: insertTruck.currentLatitude || null,
+        currentLongitude: insertTruck.currentLongitude || null,
+      })
+      .returning();
+    return truck;
+  }
+
+  async updateTruck(id: number, updateData: Partial<InsertTruck>): Promise<Truck | undefined> {
+    const [truck] = await db
+      .update(trucks)
+      .set({
+        ...updateData,
+        lastUpdated: new Date()
+      })
+      .where(eq(trucks.id, id))
+      .returning();
+    return truck || undefined;
+  }
+
+  async updateTruckLocation(id: number, latitude: number, longitude: number): Promise<Truck | undefined> {
+    return this.updateTruck(id, {
+      currentLatitude: latitude,
+      currentLongitude: longitude
+    });
+  }
+
+  async deleteTruck(id: number): Promise<boolean> {
+    const result = await db.delete(trucks).where(eq(trucks.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getTrucksWithStats(): Promise<TruckWithStats[]> {
+    const allTrucks = await this.getTrucks();
+    const allDeliveries = await this.getDeliveries();
+    
+    return allTrucks.map(truck => {
+      const truckDeliveries = allDeliveries.filter(d => d.truckId === truck.id);
+      const activeDeliveries = truckDeliveries.filter(d => ['pending', 'in-transit'].includes(d.status)).length;
+      const completedDeliveries = truckDeliveries.filter(d => d.status === 'delivered').length;
+      
+      return {
+        ...truck,
+        activeDeliveries,
+        completedDeliveries
+      };
+    });
+  }
+
+  async getDeliveries(): Promise<Delivery[]> {
+    return await db.select().from(deliveries);
+  }
+
+  async getDelivery(id: number): Promise<Delivery | undefined> {
+    const [delivery] = await db.select().from(deliveries).where(eq(deliveries.id, id));
+    return delivery || undefined;
+  }
+
+  async getDeliveriesWithClients(): Promise<DeliveryWithClient[]> {
+    const result = await db
+      .select()
+      .from(deliveries)
+      .leftJoin(clients, eq(deliveries.clientId, clients.id));
+    
+    return result.map(row => ({
+      ...row.deliveries,
+      client: row.clients!
+    }));
+  }
+
+  async getDeliveriesByTruck(truckId: number): Promise<DeliveryWithClient[]> {
+    const result = await db
+      .select()
+      .from(deliveries)
+      .leftJoin(clients, eq(deliveries.clientId, clients.id))
+      .where(eq(deliveries.truckId, truckId));
+    
+    return result.map(row => ({
+      ...row.deliveries,
+      client: row.clients!
+    }));
+  }
+
+  async createDelivery(insertDelivery: InsertDelivery): Promise<Delivery> {
+    const [delivery] = await db
+      .insert(deliveries)
+      .values({
+        ...insertDelivery,
+        priority: insertDelivery.priority || "medium",
+        status: insertDelivery.status || "pending",
+        truckId: insertDelivery.truckId || null,
+        scheduledTime: insertDelivery.scheduledTime || null,
+        completedTime: insertDelivery.completedTime || null,
+        distance: insertDelivery.distance || null,
+        estimatedTime: insertDelivery.estimatedTime || null,
+        specialInstructions: insertDelivery.specialInstructions || null
+      })
+      .returning();
+    return delivery;
+  }
+
+  async updateDelivery(id: number, updateData: Partial<InsertDelivery>): Promise<Delivery | undefined> {
+    const [delivery] = await db
+      .update(deliveries)
+      .set(updateData)
+      .where(eq(deliveries.id, id))
+      .returning();
+    return delivery || undefined;
+  }
+
+  async deleteDelivery(id: number): Promise<boolean> {
+    const result = await db.delete(deliveries).where(eq(deliveries.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getRoutes(): Promise<Route[]> {
+    return await db.select().from(routes);
+  }
+
+  async getRoute(id: number): Promise<Route | undefined> {
+    const [route] = await db.select().from(routes).where(eq(routes.id, id));
+    return route || undefined;
+  }
+
+  async getRouteWithDetails(id: number): Promise<RouteWithDetails | undefined> {
+    const route = await this.getRoute(id);
+    if (!route) return undefined;
+
+    const truck = await this.getTruck(route.truckId);
+    if (!truck) return undefined;
+
+    const deliveriesWithClients = await this.getDeliveriesWithClients();
+    const routeDeliveries = deliveriesWithClients.filter(d => 
+      route.deliveryIds.includes(d.id.toString())
+    );
+
+    return {
+      ...route,
+      truck,
+      deliveries: routeDeliveries
+    };
+  }
+
+  async getActiveRoutes(): Promise<RouteWithDetails[]> {
+    const allRoutes = await db.select().from(routes).where(eq(routes.status, 'active'));
+    
+    const routesWithDetails = await Promise.all(
+      allRoutes.map(r => this.getRouteWithDetails(r.id))
+    );
+    
+    return routesWithDetails.filter(r => r !== undefined) as RouteWithDetails[];
+  }
+
+  async createRoute(insertRoute: InsertRoute): Promise<Route> {
+    const [route] = await db
+      .insert(routes)
+      .values({
+        ...insertRoute,
+        status: insertRoute.status || "planned"
+      })
+      .returning();
+    return route;
+  }
+
+  async updateRoute(id: number, updateData: Partial<InsertRoute>): Promise<Route | undefined> {
+    const [route] = await db
+      .update(routes)
+      .set(updateData)
+      .where(eq(routes.id, id))
+      .returning();
+    return route || undefined;
+  }
+
+  async deleteRoute(id: number): Promise<boolean> {
+    const result = await db.delete(routes).where(eq(routes.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -356,4 +588,98 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Use DatabaseStorage for persistent storage
+export const storage = new DatabaseStorage();
+
+// Seed function for initial data
+export async function seedDatabase() {
+  try {
+    // Check if data already exists
+    const existingClients = await storage.getClients();
+    if (existingClients.length > 0) {
+      console.log("Database already seeded, skipping...");
+      return;
+    }
+
+    // Seed data for Dominican Republic logistics operation
+    const sampleClients = [
+      { name: "Supermercados La Cadena", address: "Av. Winston Churchill, Piantini, Santo Domingo", latitude: 18.4861, longitude: -69.9312 },
+      { name: "Farmacia Carol", address: "Calle El Conde 253, Zona Colonial, Santo Domingo", latitude: 18.4735, longitude: -69.8849 },
+      { name: "Restaurant El Mesón", address: "Av. George Washington 367, Malecón, Santo Domingo", latitude: 18.4648, longitude: -69.8932 },
+      { name: "Hotel Casa Colonial", address: "Calle Arzobispo Meriño 106, Zona Colonial", latitude: 18.4728, longitude: -69.8835 },
+      { name: "Ferretería Dominicana", address: "Av. 27 de Febrero 1762, Ensanche Naco", latitude: 18.4789, longitude: -69.9156 }
+    ];
+
+    const sampleTrucks = [
+      { identifier: "CAM-001", driver: "Carlos Martínez", currentLatitude: 18.4861, currentLongitude: -69.9312, status: "in-transit" },
+      { identifier: "CAM-002", driver: "María González", currentLatitude: 18.4735, currentLongitude: -69.8849, status: "loading" },
+      { identifier: "CAM-003", driver: "José Rodríguez", currentLatitude: 18.4648, currentLongitude: -69.8932, status: "completed" }
+    ];
+
+    // Create clients and trucks
+    const createdClients = await Promise.all(
+      sampleClients.map(client => storage.createClient(client))
+    );
+    
+    const createdTrucks = await Promise.all(
+      sampleTrucks.map(truck => storage.createTruck(truck))
+    );
+
+    // Create sample deliveries
+    const sampleDeliveries = [
+      {
+        clientId: createdClients[0].id,
+        truckId: createdTrucks[0].id,
+        itemType: "cajas",
+        itemCount: 5,
+        priority: "high",
+        status: "in-transit",
+        distance: 8.5,
+        estimatedTime: 35,
+        specialInstructions: "Entrega en horario matutino preferiblemente"
+      },
+      {
+        clientId: createdClients[1].id,
+        truckId: createdTrucks[0].id,
+        itemType: "medicamentos",
+        itemCount: 2,
+        priority: "urgent",
+        status: "delivered",
+        distance: 3.2,
+        estimatedTime: 15,
+        completedTime: new Date(),
+        specialInstructions: "Requiere refrigeración"
+      },
+      {
+        clientId: createdClients[2].id,
+        truckId: createdTrucks[1].id,
+        itemType: "suministros",
+        itemCount: 8,
+        priority: "medium",
+        status: "pending",
+        distance: 12.8,
+        estimatedTime: 50,
+        specialInstructions: "Coordinar con gerente de recepción"
+      },
+      {
+        clientId: createdClients[3].id,
+        truckId: createdTrucks[2].id,
+        itemType: "equipos",
+        itemCount: 1,
+        priority: "low",
+        status: "delivered",
+        distance: 4.7,
+        estimatedTime: 20,
+        completedTime: new Date(Date.now() - 2 * 60 * 60 * 1000) // 2 hours ago
+      }
+    ];
+
+    await Promise.all(
+      sampleDeliveries.map(delivery => storage.createDelivery(delivery))
+    );
+
+    console.log("Database seeded successfully with Dominican Republic logistics data");
+  } catch (error) {
+    console.error("Error seeding database:", error);
+  }
+}
